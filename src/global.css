@@ -1,0 +1,38 @@
+@import '~antd/dist/antd.css';
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+}
+
+.flexColumn {
+  width: 100%;
+  padding: 2px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.flexRow {
+  width: 100%;
+  padding: 2px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.console {
+  width: 100%;
+  border: aquamarine solid 1px;
+  padding: 3px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  height: 400px;
+  overflow: auto;
+}

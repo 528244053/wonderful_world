@@ -1,0 +1,14 @@
+
+
+.flexOperate {
+  padding: 2px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: auto;
+}
+
+.flexOperate button {
+  margin: 0 5px;
+}
