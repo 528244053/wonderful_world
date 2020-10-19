@@ -26,6 +26,13 @@ body {
   align-items: center;
 }
 
+
+.contentBox {
+  width: 100%;
+  padding: 2px;
+  box-sizing: border-box;
+}
+
 .console {
   width: 100%;
   border: aquamarine solid 1px;

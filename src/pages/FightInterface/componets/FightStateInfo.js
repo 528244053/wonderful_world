@@ -1,11 +1,11 @@
 import React from 'react';
 import { Popover, Progress, Tag } from 'antd';
 
-const FightStateInfo = ({state,type,renderState}) => {
+const FightStateInfo = ({person,type,renderPerson}) => {
 
 
   const getStatus = () => {
-     const percent = state.life/state.lifeMax;
+     const percent = renderPerson.life/renderPerson.lifeMax;
      if(percent > 0.7) {
        return 'success'
      }  else if(percent > 0.3) {
@@ -16,31 +16,32 @@ const FightStateInfo = ({state,type,renderState}) => {
 
   return(
     <div className={'flexColumn'}>
-      <div className={'flexRow'}>
-        <span style={{paddingRight:20}}>{state.name}</span>
-        攻击：<span style={{paddingRight:10,color:'red'}}>{renderState.atk}</span>
-        防御：<span style={{paddingRight:10,color:'green'}}>{renderState.def}</span>
-        速度：<span style={{paddingRight:10,color:'blue'}}>{renderState.speed}</span>
-        暴击：<span style={{paddingRight:10,color:'blue'}}>{renderState.cri}%</span>
-        闪避：<span style={{paddingRight:10,color:'blue'}}>{renderState.miss}%</span>
-        暴伤：<span style={{paddingRight:10,color:'blue'}}>{renderState.criDamage*100}%</span>
+      <div className={'contentBox'}>
+        <span style={{paddingRight:20}}>{renderPerson.name}</span>
+        <span style={{ display:'inline-block' }}>攻击：<span style={{paddingRight:10,color:'red'}}>{renderPerson.atk}</span></span>
+        <span style={{ display:'inline-block' }}>防御：<span style={{paddingRight:10,color:'green'}}>{renderPerson.def}</span></span>
+        {type === "role" && <span style={{ display:'inline-block' }}>嘲讽：<span style={{paddingRight:10,color:'pink'}}>{renderPerson.taunt}</span></span>}
+        <span style={{ display:'inline-block' }}>速度：<span style={{paddingRight:10,color:'blue'}}>{renderPerson.speed}</span></span>
+        <span style={{ display:'inline-block' }}>暴击：<span style={{paddingRight:10,color:'blue'}}>{renderPerson.cri}%</span></span>
+        <span style={{ display:'inline-block' }}>闪避：<span style={{paddingRight:10,color:'blue'}}>{renderPerson.miss}%</span></span>
+        <span style={{ display:'inline-block' }}>暴伤：<span style={{paddingRight:10,color:'blue'}}>{renderPerson.criDamage*100}%</span></span>
       </div>
       <div className={'flexRow'}>
-        <div style={{width:50}}>血量：</div>
-        <Progress percent={state.life/renderState.lifeMax*100} showInfo={false} status={getStatus()}/>
-        <div style={{width:60}}>{state.life}/{renderState.lifeMax}</div>
+        <div style={{width:60}}>血量：</div>
+        <Progress style={{width:'75%'}}  percent={renderPerson.life/renderPerson.lifeMax*100} showInfo={false} status={getStatus()}/>
+        <div style={{width:60}}>{renderPerson.life}/{renderPerson.lifeMax}</div>
       </div>
       <div className={'flexRow'}>
-        <div style={{width:60}}>NP：</div>
-        <Progress percent={state.pow} strokeColor={'orange'} />
+        <div style={{width:60}}>内力：</div>
+        <Progress style={{ width:'80%' }} percent={renderPerson.pow} strokeColor={'orange'} />
       </div>
       <div className={'flexRow'}>
         <div style={{width:60}}>行动条：</div>
-        <Progress percent={state.process} status={'active'} style={{width:1000}} />
+        <Progress percent={renderPerson.process} status={'active'} style={{width:'80%'}} />
       </div>
       <div className={'flexRow'}>
         <div style={{width:60}}>状态：</div>
-        {state.state.map(state => (
+        {renderPerson.state.map(state => (
           <Popover key={state.id} content={state.desc} placement={'bottom'}>
             <Tag color={state.color}>
               {state.name}({state.restTurn})

@@ -1,19 +1,16 @@
 import React from 'react'
 import RoleSelect from '@/pages/GameStartBefore/components/RoleSelect';
 import { connect } from 'react-redux';
-import { routerRedux } from 'dva';
 
 @connect(({ dispatch }) => ({ dispatch }))
 class GameStartBefore extends React.Component {
 
   handleOnSelect = role => {
     const { dispatch } = this.props;
-    dispatch(routerRedux.push({
-      pathname:'/GameInterface',
-      query:{
-        roleId:role.id,
-      }
-    }))
+    dispatch({
+      type:"gameModel/init",
+      payload:{ roleId:role.id, }
+    })
   };
 
   render() {

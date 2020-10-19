@@ -20,7 +20,7 @@ const timeStop:state = {
   restTurn:5,
   color:'red',
   onRender: (renderSate,message,source) => {
-    const timeStops = getSelf(source,'state','timeStop');
+    const timeStops = getSelf(renderSate,'state','timeStop');
     if(timeStops && timeStops.restTurn > 0) {
       timeStops.restTurn -= 1;
       renderSate.speed = 0;
@@ -37,13 +37,13 @@ const lindao_meilin:state = {
   color:'red',
   rate:1.3,
   onRender: (renderSate,message,source) => {
-    const selfState = getSelf(source,'state','lindao_meilin');
+    const selfState = getSelf(renderSate,'state','lindao_meilin');
     if(selfState && selfState.restTurn > 0) {
       renderSate.atk = numberToInt(renderSate.atk * (selfState.rate || 1.3));
     }
   },
   onEndTurn: (renderSate,message,source) => {
-    const selfState = getSelf(source,'state','lindao_meilin');
+    const selfState = getSelf(renderSate,'state','lindao_meilin');
     if(selfState && selfState.restTurn > 0) {
       selfState.restTurn -= 1;
     }
@@ -57,14 +57,14 @@ const huansu_meilin:state = {
   restTurn:3,
   color:'blue',
   onRender: (renderSate,message,source) => {
-    const selfState = getSelf(source,'state','huansu_meilin');
+    const selfState = getSelf(renderSate,'state','huansu_meilin');
     if(selfState && selfState.restTurn > 0) {
       renderSate.miss = 100;
       renderSate.powGet = numberToInt(renderSate.powGet * 1.5);
     }
   },
   onEndTurn: (renderSate,message,source) => {
-    const selfState = getSelf(source,'state','huansu_meilin');
+    const selfState = getSelf(renderSate,'state','huansu_meilin');
     if(selfState && selfState.restTurn > 0) {
       selfState.restTurn -= 1;
     }
@@ -86,8 +86,8 @@ const hero_meilin:state = {
       renderSate.lifeMax = numberToInt(renderSate.lifeMax * 1.3);
     }
   },
-  onEndTurn: (renderSate,message,source) => {
-    const selfState = getSelf(source,'state','hero_meilin');
+  onEndTurn: (renderSate) => {
+    const selfState = getSelf(renderSate,'state','hero_meilin');
     if(selfState && selfState.restTurn > 0) {
       selfState.restTurn -= 1;
     }
@@ -110,8 +110,8 @@ const awalong_meilin:state = {
       renderSate.cri = numberToInt(renderSate.cri * getRandomRange(1,4));
     }
   },
-  onEndTurn: (renderSate,message,source) => {
-    const selfState = getSelf(source,'state','awalong_meilin');
+  onEndTurn: (renderSate) => {
+    const selfState = getSelf(renderSate,'state','awalong_meilin');
     if(selfState && selfState.restTurn > 0) {
       selfState.restTurn -= 1;
     }
@@ -132,7 +132,7 @@ const lose_def:state = {
     }
   },
   onEndTurn: (renderSate,message,source) => {
-    const selfState = getSelf(source,'state','lose_def');
+    const selfState = getSelf(renderSate,'state','lose_def');
     if(selfState && selfState.restTurn > 0) {
       selfState.restTurn -= 1;
     }
@@ -153,7 +153,7 @@ const slow_down:state = {
     }
   },
   onEndTurn: (renderSate,message,source) => {
-    const selfState = getSelf(source,'state','lose_def');
+    const selfState = getSelf(renderSate,'state','lose_def');
     if(selfState && selfState.restTurn > 0) {
       selfState.restTurn -= 1;
     }
@@ -167,11 +167,18 @@ const liuxue:state = {
   restTurn:5,
   color:'red',
   onRender: (renderSate,message,source) => {
-    const self = getSelf(source,'state','liuxue');
+    const self = getSelf(renderSate,'state','liuxue');
     if(self && self.restTurn > 0) {
       source.life -= numberToInt(renderSate.lifeMax * 0.05);
       self.restTurn --;
     }
+  }
+};
+
+const defaultOnEndTurn = (renderSate:liveThings,message:string[],source:liveThings,id:string) => {
+  const selfState = getSelf(renderSate,'state',id);
+  if(selfState && selfState.restTurn > 0) {
+    selfState.restTurn -= 1;
   }
 };
 

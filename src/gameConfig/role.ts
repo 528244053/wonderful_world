@@ -25,6 +25,7 @@ export interface liveThings {
 
 export interface Role extends liveThings{
   level:number,
+  taunt:number,
   imgUrl:string,
 }
 
@@ -45,6 +46,7 @@ const jojo:Role = {
   criDamage:1.8,
   miss:10,
   suck:0,
+  taunt:6,
   skill:[skillList.oula,skillList.timeStopSkill,skillList.baijinzhi,skillList.baijinzhixing],
   state:[],
   imgUrl: rolePicPath+'/jojo.jpg',
@@ -66,6 +68,7 @@ const meilin:Role = {
   criDamage:1.8,
   miss:10,
   suck:0,
+  taunt:6,
   skill:[skillList.lindao_meilin,skillList.huansu_meilin,skillList.hero_meilin,skillList.awalong_meilin],
   state:[],
   imgUrl: rolePicPath+'/meilin.png',

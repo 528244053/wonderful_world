@@ -2,7 +2,6 @@ import React from 'react';
 import { connect } from 'react-redux';
 import FightStateInfo from '@/pages/FightInterface/componets/FightStateInfo';
 import OperateMenu from '@/pages/FightInterface/componets/OperateMenu';
-import roleList from '@/gameConfig/role'
 import enemyList from '@/gameConfig/enemy';
 import { calculateDamage, renderDamage, stateFilter } from '@/utils/fightUtils';
 import { getElementToPageTop } from '@/utils/commonUtil';
@@ -18,10 +17,11 @@ class FightInterFace extends React.Component {
     this.state = {
       isRun:true,
       message:[],
-      role:roleList.jojo,
+      roleList:[],
       enemy:enemyList.slime,
-      renderRole:roleList.jojo,
+      renderRoleList:[],
       renderEnemy:enemyList.slime,
+      personWillDoId:null,
       consoleHeight:400
     };
   }
@@ -47,15 +47,14 @@ class FightInterFace extends React.Component {
     })
   };
 
-  fightStart = (role,enemy) => {
-    const roleState = { ...role,process:0 };
-    const enemyState = { ...enemy,process:0 };
+  fightStart = (roleList,enemy) => {
     this.setState({
-      role:roleState,
-      enemy:enemyState,
+      roleList,
+      renderRoleList:roleList.map(role => lodash.cloneDeep(role)),
+      renderEnemy:lodash.cloneDeep(enemy),
+      enemy,
       message:[<div key="0">开始战斗</div>]
-    });
-    this.processInterval = setTimeout(() => this.processRun(),800);
+    },() => setTimeout(() => this.processRun(),800));
   };
 
   componentWillUnmount() {
@@ -63,66 +62,49 @@ class FightInterFace extends React.Component {
   }
 
   processRun = () => {
-    const { role,enemy,isRun=true,message } = this.state;
+    const { roleList,enemy,renderRoleList,renderEnemy,isRun=true,message } = this.state;
+    console.log(renderRoleList,"run");
     if(!isRun) return;
-    const newRole = this.renderState(role);
-    const newEnemy = this.renderState(enemy);
-    const newRP = role.process + newRole.speed;
-    const newEP = enemy.process + newEnemy.speed;
-    let run = isRun;
-    let enemyDo = false;
-    if(newRP >= 100 && newEP >= 100) {
-      const costR = (100 - role.process) / newRole.speed;
-      const costE = (100 - enemy.process) / newEnemy.speed;
-      if(costR<=costE) {
-        role.process = 0;
-        enemy.process =  enemy.process +  Number.parseInt((newEnemy.speed*costR).toString());
-        run = false;
-        if(enemy.process >= 100) enemy.process -= 2;
-        message.push(<div key={message.length} style={{color:'green'}}>{newRole.name}-行动</div>);
-      } else {
-        role.process = role.process + Number.parseInt((newEnemy.speed*costR).toString());
-        enemy.process = 0;
-        message.push(<div key={message.length} style={{color:'red'}}>{newEnemy.name}-行动</div>);
-        if(role.process >= 100) role.process -= 2;
-        enemyDo = true;
+    renderRoleList.forEach(renderRole => {
+      const role = roleList.find(role => role.id === renderRole.id);
+      this.renderState(role,renderRole);
+    });
+   this.renderState(enemy,renderEnemy);
+    //处理行动逻辑
+    let personWillDoId = null; //行动人物id
+    const handleRun = () => {
+      const sortPersonBySpeed = [...renderRoleList,renderEnemy].sort((a,b) => b.process - a.process);
+      if(sortPersonBySpeed[0].process >= 100) {
+        const personWillDo = sortPersonBySpeed[0];
+        personWillDoId = personWillDo.id;
+        const diffProcess = personWillDo.process - 100;
+        personWillDo.process = 0;
+        sortPersonBySpeed.forEach((person,index) => (index && (person.process -= diffProcess)));
       }
-    } else if(newRP >= 100 || newEP >= 100) {
-      if(newRP >= 100) {
-        role.process = newRP - 100;
-        enemy.process = newEP;
-        run = false;
-        message.push(<div key={message.length} style={{color:'green'}}>{newRole.name}-行动</div>);
-      }
-      if(newEP >= 100) {
-        enemy.process = newEP - 100;
-        role.process = newRP;
-        enemyDo = true;
-        message.push(<div key={message.length} style={{color:'red'}}>{newEnemy.name}-行动</div>);
-      }
-    } else {
-      role.process = newRP;
-      enemy.process = newEP;
+    };
+    handleRun();
+    if(!personWillDoId) {
+      renderEnemy.process = (renderEnemy.process || 0) + renderEnemy.speed;
+      renderRoleList.forEach(role => role.process = (role.process || 0) + role.speed);
+      handleRun();
     }
     this.setState({
-      role:role,
-      enemy:enemy,
-      renderRole:newRole,
-      renderEnemy:newEnemy,
-      isRun:run,
+      roleList,
+      enemy,
+      renderRoleList,
+      renderEnemy,
+      personWillDoId,
       message
     },() =>{
-      if(run && !enemyDo) this.processInterval = setTimeout(() => this.processRun(),800);
-      if(enemyDo) this.handleEnemyDo()
+      if(!personWillDoId) this.processInterval = setTimeout(() => this.processRun(),800);
+      if(enemy.id === personWillDoId) this.handleEnemyDo()
     });
   };
 
-  renderState = state => {
+  renderState = (person,renderPerson) => {
     const { message } = this.state;
-    const renderState = lodash.cloneDeep(state);
-    state.state.forEach(_ => {if(_.onRender) _.onRender(renderState,message,state)});
-    stateFilter(state);
-    return renderState;
+    renderPerson.state.forEach(_ => {if(_.onRender) _.onRender(renderPerson,message,person)});
+    stateFilter(renderPerson);
   };
 
   renderStateAfterAttack = (sRender,tRender,message,source,target) => {
@@ -130,97 +112,78 @@ class FightInterFace extends React.Component {
   };
   
   handleEnemyDo = () => {
-    const { enemy } = this.state;
+    const { enemy,renderRoleList } = this.state;
     const canUseSkill = enemy.skill.find(_ => _.cost <= enemy.pow && _.restCd <= 0);
+    const targetRole = [...renderRoleList].sort((a,b) => b.taunt || 0 - a.taunt || 0)[0];
     if(canUseSkill) {
-      this.handleUseSkill('enemy',canUseSkill);
+      this.handleUseSkill(enemy.id,targetRole.id,canUseSkill);
     } else {
-      this.handleAttack('enemy');
+      this.handleAttack(enemy.id,targetRole.id);
     }
   };
 
-  handleAttack = (sourceType) => {
-    let source,target,sRender,tRender;
-    const { message,role,enemy,renderRole,renderEnemy } = this.state;
-    const isRole = sourceType === 'role';
-    if(isRole) {
-      source = role;
-      sRender = renderRole;
-      target = enemy;
-      tRender = renderEnemy;
-    } else {
-      source = enemy;
-      sRender = renderEnemy;
-      tRender = renderRole;
-      target = role;
-    }
-    const damage = calculateDamage(sRender,tRender,message,'普通攻击');
-    renderDamage(damage,source,target,message,sRender,tRender,'normal');
-    this.renderStateAfterAttack(sRender,tRender,message,source,target);
+  handleAttack = (sourcePersonId,targetPersonId) => {
+    const { message,roleList,enemy,renderRoleList,renderEnemy } = this.state;
+    const allRenderPerson = [...renderRoleList,renderEnemy];
+    const sourceRenderPerson = allRenderPerson.find(person => person.id === sourcePersonId);
+    const targetRenderPerson = allRenderPerson.find(person => person.id === targetPersonId);
+    const allPerson = [...roleList,enemy];
+    const sourcePerson = allPerson.find(person => person.id === sourcePersonId);
+    const targetPerson = allPerson.find(person => person.id === targetPersonId);
+    const damage = calculateDamage(sourceRenderPerson,targetRenderPerson,message,'普通攻击');
+    renderDamage(damage,sourcePerson,targetPerson,message,sourceRenderPerson,targetRenderPerson,'normal');
+    this.renderStateAfterAttack(sourcePerson,targetPerson,message,sourceRenderPerson,targetRenderPerson);
     this.setState({
-      role: sourceType === 'role'?source:target,
-      enemy:sourceType === 'enemy'?source:target,
-      renderRole: sourceType === 'role'?sRender:tRender,
-      renderEnemy:sourceType === 'enemy'?sRender:tRender,
+      renderRoleList,
+      renderEnemy,
       message,
-    },() => this.handleTurnEnd(sourceType))
+    },() => this.handleTurnEnd(sourcePersonId))
+  };
+
+  getPersonInfoById = (personId,roleList,enemy,renderRoleList,renderEnemy) => {
+    const allRenderPerson = [...renderRoleList,renderEnemy];
+    const person = allRenderPerson.find(person => person.id === personId);
+    const allPerson = [...roleList,enemy];
+    const renderPerson = allPerson.find(person => person.id === personId);
+    return [person,renderPerson];
   };
 
 
-  handleUseSkill = (sourceType,skill) => {
-    let source,target,sRender,tRender;
-    const { message,role,enemy,renderRole,renderEnemy } = this.state;
-    const isRole = sourceType === 'role';
-    if(isRole) {
-      source = role;
-      sRender = renderRole;
-      target = enemy;
-      tRender = renderEnemy;
-    } else {
-      source = enemy;
-      sRender = renderEnemy;
-      tRender = renderRole;
-      target = role;
-    }
-    skill.onUse(sRender,tRender,message,source,target);
+  handleUseSkill = (sourceId,targetId,skill) => {
+    const { message,roleList,enemy,renderRoleList,renderEnemy } = this.state;
+    const sourceInfo = this.getPersonInfoById(sourceId,roleList,enemy,renderRoleList,renderEnemy);
+    const targetInfo = this.getPersonInfoById(targetId,roleList,enemy,renderRoleList,renderEnemy);
+    skill.onUse(sourceInfo[1],targetInfo[1],message,sourceInfo[0],targetInfo[0],renderRoleList);
     this.setState({
-      role: sourceType === 'role'?source:target,
-      enemy:sourceType === 'enemy'?source:target,
-      renderRole:sourceType === 'role'?sRender:tRender,
-      renderEnemy:sourceType === 'enemy'?sRender:tRender,
+      roleList,
+      enemy,
+      renderRoleList,
+      renderEnemy,
       message,
-      isRun:true,
-    },() => this.handleTurnEnd(sourceType))
+      personWillDoId:null,
+    },() => this.handleTurnEnd(sourceId))
   };
 
-  handleTurnEnd = sourceType => {
-    let source,target,sRender,tRender;
-    const { message,role,enemy,renderRole,renderEnemy } = this.state;
-    const isRole = sourceType === 'role';
-    if(isRole) {
-      source = role;
-      sRender = renderRole;
-      target = enemy;
-      tRender = renderEnemy;
-    } else {
-      source = enemy;
-      sRender = renderEnemy;
-      tRender = renderRole;
-      target = role;
-    }
-    source.skill.forEach(skill => {
-        if(skill.restCd > 0) skill.restCd--;
-      });
-    source.state.forEach( _ => {if(_.onEndTurn) _.onEndTurn(sRender,message,source)});
-    console.log(source.state);
-    stateFilter(source);
+
+
+  handleTurnEnd = sourcePersonId => {
+    const { message,roleList,enemy,renderRoleList,renderEnemy } = this.state;
+    const personList = this.getPersonInfoById(sourcePersonId,roleList,enemy,renderRoleList,renderEnemy);
+    const person = personList[0];
+    const renderPerson = personList[1];
+    (renderPerson.skill || []).forEach(skill => {
+      if(skill.restCd > 0) skill.restCd--;
+    });
+
+    renderPerson.state.forEach( _ => {if(_.onEndTurn) _.onEndTurn(renderPerson,message,person)});
+    stateFilter(renderPerson);
     this.setState({
-      role: sourceType === 'role'?source:target,
-      enemy:sourceType === 'enemy'?source:target,
-      renderRole: sourceType === 'role'?sRender:tRender,
-      renderEnemy:sourceType === 'enemy'?sRender:tRender,
+      roleList,
+      enemy,
+      renderRoleList,
+      renderEnemy,
       message,
-      isRun:true
+      personWillDoId:null,
     },() => this.processInterval = setTimeout(() => this.processRun(),700))
   };
 
@@ -232,10 +195,10 @@ class FightInterFace extends React.Component {
 
   render() {
     const {
-      isRun,
-      role,
+      personWillDoId,
+      roleList = [],
       enemy,
-      renderRole,
+      renderRoleList = [],
       renderEnemy,
       message = [],
       consoleHeight,
@@ -243,9 +206,16 @@ class FightInterFace extends React.Component {
     return(
       <div>
         <div>
-          <FightStateInfo state={enemy} type={'enemy'} renderState={renderEnemy} />
-          <FightStateInfo state={role} type={'role'} renderState={renderRole} />
-          <OperateMenu handleAttack={this.handleAttack} handleUseSkill={this.handleUseSkill} role={role} isRun={isRun}/>
+          <FightStateInfo person={enemy} type={'enemy'} renderPerson={renderEnemy} />
+          {renderRoleList.map(renderRole => {
+            const role = roleList.find(role => role.id === renderRole.id);
+            return (
+              <div key={renderRole.id}>
+                <FightStateInfo person={role} type={'role'} renderPerson={renderRole} />
+                <OperateMenu handleAttack={this.handleAttack} handleUseSkill={this.handleUseSkill} role={renderRole} targetPerson={enemy} isRun={personWillDoId !== renderRole.id}/>
+              </div>
+            );
+          })}
         </div>
         <div className={'flexColumn'} ref={this.consoleRef} style={{height:consoleHeight}}>
           <div>控制台</div>

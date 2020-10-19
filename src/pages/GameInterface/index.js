@@ -2,6 +2,7 @@ import React from 'react';
 import { Button,Modal } from 'antd';
 import { connect } from 'react-redux';
 import enemyList from '@/gameConfig/enemy';
+import { routerRedux } from 'dva';
 
 @connect(({ dispatch,gameModel }) => ({ dispatch,gameModel }))
 class GameInterface extends React.Component {
@@ -10,6 +11,15 @@ class GameInterface extends React.Component {
     super(props);
     this.state = {
       selectModalVisible:false,
+    }
+  }
+
+  componentDidMount() {
+    const { gameModel : { roleList = [] },dispatch } = this.props;
+    if(!roleList.length) {
+      dispatch(routerRedux.push(
+        { pathname:'/GameStartBefore',}
+      ))
     }
   }
 

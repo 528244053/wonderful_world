@@ -44,24 +44,28 @@ export const calculateDamage = (sourceState:liveThings, targetState:liveThings, 
   return damage;
 };
 
-export const renderDamage = (damage:number,source:liveThings,traget:liveThings,message:any[],sRender:liveThings,tRender:liveThings,attackType:string):boolean => {
-  const isRole = lodash.get(source,'level');
+export const renderDamage = (damage:number,source:liveThings,target:liveThings,message:any[],sRender:liveThings,tRender:liveThings,attackType:string):boolean => {
+  const isRole = lodash.get(source,'taunt') !== undefined;
   if(attackType === 'normal') {
-    source.pow += sRender.powGet;
-    if(source.pow > 100) source.pow = 100;
+    sRender.pow += sRender.powGet;
+    if(sRender.pow > 100) sRender.pow = 100;
   }
-  traget.life -= damage;
+  tRender.life -= damage;
+  if(isRole) {
+    // @ts-ignore
+    sRender.taunt += damage;
+  }
   if(sRender.suck && damage>0) {
-    source.life += numberToInt(sRender.suck * damage / 100);
-    if(source.life > sRender.lifeMax) source.life = sRender.lifeMax;
+    sRender.life += numberToInt(sRender.suck * damage / 100);
+    if(sRender.life > sRender.lifeMax) sRender.life = sRender.lifeMax;
     message.push(
       <div key={message.length}>
-        <span style={{ color: isRole ? 'green' : 'red' }}>{source.name}</span>
+        <span style={{ color: isRole ? 'green' : 'red' }}>{sRender.name}</span>
         通过伤害回复了<span style={{ color: 'green' }}>{numberToInt(sRender.suck * damage / 100)}点生命</span>
       </div>
     )
   }
-  return isFightOver(isRole?source:traget,!isRole?source:traget);
+  return isFightOver(isRole?sRender:tRender,!isRole?sRender:tRender);
 };
 
 export const isFightOver = (role:liveThings,enemy:liveThings) => {

@@ -21,19 +21,21 @@ export default {
   effects:{
     *init({ payload,callback },{ put,select }) {
       const gameModel = yield select(_ => _.gameModel);
-      const { role,enemy } = gameModel;
-      if(!role || !enemy) {
+      const { roleList = [],enemy,stage } = gameModel;
+      console.log(roleList,"role");
+      if(!roleList.length || !enemy) {
         message.error("无法获取到角色以及敌人信息");
         yield put(routerRedux.goBack());
       } else {
         yield put({
           type:'updateState',
           payload: {
-            role,
+            roleList,
             enemy,
+            stage
           }
         });
-        if(callback) callback(role,enemy);
+        if(callback) callback(roleList,enemy);
       }
     }
   },

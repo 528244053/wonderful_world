@@ -2,7 +2,7 @@ import React,{ useState } from 'react';
 import { Button, Popover, Spin } from 'antd';
 import styles from '../index.css'
 
-const OperateMenu = ({handleAttack,isRun=true,role,handleUseSkill}) => {
+const OperateMenu = ({handleAttack,isRun=true,role,handleUseSkill,targetPerson = {}}) => {
 
   const [mode,setMode] = useState('main');
 
@@ -16,7 +16,7 @@ const OperateMenu = ({handleAttack,isRun=true,role,handleUseSkill}) => {
         const canUse = restCd <= 0 && role.pow >= skill.cost;
         operateList.push(
           <Popover key={skill.id} placement={'bottom'} content={skill.desc}>
-            <Button onClick={() => handleUseSkill('role',skill)} disabled={!canUse}>{skill.name}{restCd>0?`(${skill.restCd})`:''}</Button>
+            <Button onClick={() => handleUseSkill(role.id,targetPerson.id,skill)} disabled={!canUse}>{skill.name}{restCd>0?`(${skill.restCd})`:''}</Button>
           </Popover>
         );
       });
@@ -24,7 +24,7 @@ const OperateMenu = ({handleAttack,isRun=true,role,handleUseSkill}) => {
       return operateList;
     }
     return [
-      <Button onClick={() => handleAttack('role')} key={'attack'}>攻击</Button>,
+      <Button onClick={() => handleAttack(role.id,targetPerson.id)} key={'attack'}>攻击</Button>,
       <Button onClick={() => setMode('skill')} key={'skill'}>技能</Button>
     ]
   };
