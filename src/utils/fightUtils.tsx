@@ -44,7 +44,7 @@ export const calculateDamage = (sourceState:liveThings, targetState:liveThings, 
   return damage;
 };
 
-export const renderDamage = (damage:number,source:liveThings,target:liveThings,message:any[],sRender:liveThings,tRender:liveThings,attackType:string):boolean => {
+export const renderDamage = (damage:number,source:liveThings,target:liveThings,message:any[],sRender:liveThings,tRender:liveThings,attackType:string):void => {
   const isRole = lodash.get(source,'taunt') !== undefined;
   if(attackType === 'normal') {
     sRender.pow += sRender.powGet;
@@ -65,11 +65,17 @@ export const renderDamage = (damage:number,source:liveThings,target:liveThings,m
       </div>
     )
   }
-  return isFightOver(isRole?sRender:tRender,!isRole?sRender:tRender);
 };
 
-export const isFightOver = (role:liveThings,enemy:liveThings) => {
-  return false;
+export const getDeadPerson = (roleList:liveThings[] = [],enemy:liveThings) => {
+  const deadRole = roleList.find(role => role.life <= 0);
+  if(deadRole) {
+    return deadRole;
+  }
+  if(enemy.life <= 0) {
+    return enemy;
+  }
+  return null;
 };
 
 export const getSelf = (state:liveThings,type:string,id:string):any => {

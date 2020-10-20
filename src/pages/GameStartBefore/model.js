@@ -4,9 +4,7 @@ import enemyList from '@/gameConfig/enemy';
 
 export default {
   namespace:'gameBeforeModel',
-  state:{
-
-  },
+  state:{},
   effects:{
     *init({ payload },{ put,select }) {
       const { load=false,roleId } = payload;

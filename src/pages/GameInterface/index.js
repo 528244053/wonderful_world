@@ -1,8 +1,9 @@
 import React from 'react';
-import { Button,Modal } from 'antd';
 import { connect } from 'react-redux';
-import enemyList from '@/gameConfig/enemy';
 import { routerRedux } from 'dva';
+import Map from '@/gameConfig/map';
+import style from './index.css';
+import EventSelect from '@/pages/GameInterface/components/EventSelect';
 
 @connect(({ dispatch,gameModel }) => ({ dispatch,gameModel }))
 class GameInterface extends React.Component {
@@ -23,36 +24,16 @@ class GameInterface extends React.Component {
     }
   }
 
-  fight = enemy => {
-    const { dispatch } = this.props;
-    dispatch({
-      type:'gameModel/fightEnemy',
-      payload:{
-        enemy
-      }
-    })
-  };
 
   render() {
-    const { selectModalVisible } = this.state;
+    const { gameModel } = this.props;
+    const { roleList,systemInfo } = gameModel;
     return(
-      <div>
-        <Button onClick={() => this.setState({ selectModalVisible:true })}>开战</Button>
-        <Modal
-          visible={selectModalVisible}
-          title={'请选择敌人'}
-          onOk={() => this.setState({ selectModalVisible:false })}
-          onCancel={() => this.setState({ selectModalVisible:false })}
-        >
-          {Object.values(enemyList).map(enemy => (
-            <Button
-              key={enemy.id}
-              onClick={() => this.fight(enemy)}
-            >
-              {enemy.name}
-            </Button>
-          ))}
-        </Modal>
+      <div className={style.gameInterface}>
+        <EventSelect currentNode={Map[systemInfo.stage-1]} roleList={roleList} />
+        <div className={style.roleInfo}>
+
+        </div>
       </div>
     );
   }

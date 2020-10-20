@@ -1,6 +1,7 @@
 import { liveThings } from '@/gameConfig/role';
 import { getRandomRange, getSelf, numberToInt } from '@/utils/fightUtils';
 
+export const renderStateFiledList = ["atk","def","miss","cri","speed","lifeMax","criDamage","powGet","suck"];
 
 export interface state {
   id:string,
@@ -32,7 +33,7 @@ const timeStop:state = {
 const lindao_meilin:state = {
   id:'lindao_meilin',
   name:'攻击力提升',
-  desc: '该单位攻击力得到上升',
+  desc: '该单位攻击力提高30%',
   restTurn:5,
   color:'red',
   rate:1.3,

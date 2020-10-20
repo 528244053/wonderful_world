@@ -1,10 +1,9 @@
 import React from 'react';
-import RoleList from '@/gameConfig/role';
 import { Modal } from 'antd';
 import SelectWindow from '@/components/SelectWinodw/SelctWindow';
 import { getRoleInfoList } from '@/utils/getInfo';
 
-const RoleSelect = ({ onSelect }) => {
+const RoleSelect = ({ onSelect,roleList = [] }) => {
 
   const handleSelect = role => {
      const modal = Modal.confirm({
@@ -23,7 +22,7 @@ const RoleSelect = ({ onSelect }) => {
 
   return(
     <div style={{display:'flex',alignItems:'center'}}>
-      {Object.values(RoleList).map(role => (
+      {roleList.map(role => (
         <SelectWindow
           key={role.id}
           height={600}

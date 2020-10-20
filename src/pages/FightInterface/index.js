@@ -3,9 +3,12 @@ import { connect } from 'react-redux';
 import FightStateInfo from '@/pages/FightInterface/componets/FightStateInfo';
 import OperateMenu from '@/pages/FightInterface/componets/OperateMenu';
 import enemyList from '@/gameConfig/enemy';
-import { calculateDamage, renderDamage, stateFilter } from '@/utils/fightUtils';
+import { calculateDamage, getDeadPerson, renderDamage, stateFilter } from '@/utils/fightUtils';
 import { getElementToPageTop } from '@/utils/commonUtil';
+import { Modal } from 'antd';
+import { renderStateFiledList } from "@/gameConfig/state";
 import lodash from  'lodash';
+import { routerRedux } from 'dva';
 
 
 @connect(({ dispatch,fightModel }) => ({ dispatch,fightModel }))
@@ -15,14 +18,13 @@ class FightInterFace extends React.Component {
     super(props);
     this.consoleRef = React.createRef();
     this.state = {
-      isRun:true,
       message:[],
       roleList:[],
       enemy:enemyList.slime,
       renderRoleList:[],
       renderEnemy:enemyList.slime,
       personWillDoId:null,
-      consoleHeight:400
+      consoleHeight:300
     };
   }
 
@@ -61,10 +63,56 @@ class FightInterFace extends React.Component {
     window.clearInterval(this.processInterval);
   }
 
+  hasFightOver = (renderRoleList,renderEnemy,message) => {
+    const { dispatch } = this.props;
+    const deadPerson = getDeadPerson(renderRoleList,renderEnemy);
+    const handleVictory = () => {
+      dispatch({
+        type:"gameModel/fightVictory",
+        payload:{ roleList:renderRoleList }
+      })
+    };
+    const handleAgain = () => {
+      dispatch(routerRedux.push(
+        { pathname:'/GameStartBefore',}
+      ))
+    };
+    const handleLose = () => {
+      dispatch(routerRedux.push(
+        { pathname:'/start',}
+      ))
+    };
+    if(deadPerson) {
+      if(deadPerson.id === renderEnemy.id) {
+        message.push(<div>{`${renderEnemy.name}阵亡，战斗胜利`}</div>);
+        const confirm = Modal.confirm({
+          title:'战斗胜利',
+          content:"战斗胜利，点击确定进入下个阶段",
+          onOk:handleVictory,
+          onCancel:handleVictory,
+        })
+      } else {
+        const roleDead = renderRoleList.find(role => role.life <= 0);
+        message.push(<div>{`${roleDead.name}阵亡，战斗失败`}</div>);
+        const confirm = Modal.confirm({
+          title:'战斗失败',
+          content:`乙方${roleDead.name}阵容，是否重新挑战`,
+          onOk:handleAgain,
+          onCancel:handleLose,
+        })
+      }
+      this.setState({ message });
+      return true;
+    }
+    return false;
+  };
+
+
   processRun = () => {
-    const { roleList,enemy,renderRoleList,renderEnemy,isRun=true,message } = this.state;
-    console.log(renderRoleList,"run");
-    if(!isRun) return;
+    const { roleList,enemy,renderRoleList,renderEnemy,message } = this.state;
+    if(this.hasFightOver(renderRoleList,renderEnemy,message)) {
+      return;
+    }
     renderRoleList.forEach(renderRole => {
       const role = roleList.find(role => role.id === renderRole.id);
       this.renderState(role,renderRole);
@@ -97,14 +145,23 @@ class FightInterFace extends React.Component {
       message
     },() =>{
       if(!personWillDoId) this.processInterval = setTimeout(() => this.processRun(),800);
-      if(enemy.id === personWillDoId) this.handleEnemyDo()
+      if(enemy.id === personWillDoId) {
+        setTimeout(() => this.handleEnemyDo(),400);
+      }
     });
   };
 
   renderState = (person,renderPerson) => {
     const { message } = this.state;
+    this.setBaseInfo(person,renderPerson);
     renderPerson.state.forEach(_ => {if(_.onRender) _.onRender(renderPerson,message,person)});
     stateFilter(renderPerson);
+  };
+
+  setBaseInfo = (person,renderPerson) => {
+    renderStateFiledList.forEach(filed => {
+      renderPerson[filed] = person[filed];
+    })
   };
 
   renderStateAfterAttack = (sRender,tRender,message,source,target) => {
@@ -174,22 +231,21 @@ class FightInterFace extends React.Component {
     (renderPerson.skill || []).forEach(skill => {
       if(skill.restCd > 0) skill.restCd--;
     });
-
     renderPerson.state.forEach( _ => {if(_.onEndTurn) _.onEndTurn(renderPerson,message,person)});
     stateFilter(renderPerson);
     this.setState({
       roleList,
       enemy,
-      renderRoleList,
-      renderEnemy,
+      renderRoleList:[...renderRoleList],
+      renderEnemy:{...renderEnemy},
       message,
       personWillDoId:null,
-    },() => this.processInterval = setTimeout(() => this.processRun(),700))
+    },() => this.processInterval = setTimeout(() => this.processRun(),800))
   };
 
   getConsoleHeight = () => {
-    if(!this.consoleRef) return 600;
-    const offsetTop = getElementToPageTop(this.consoleRef.current) || 600;
+    if(!this.consoleRef) return 300;
+    const offsetTop = getElementToPageTop(this.consoleRef.current) || 300;
     return window.innerHeight - offsetTop;
   };
 
