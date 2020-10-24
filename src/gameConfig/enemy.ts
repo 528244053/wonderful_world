@@ -22,7 +22,7 @@ const slime:enemy = {
   criDamage:1.8,
   miss:0,
   suck:0,
-  skill:[],
+  skill:[skillList.tuchi,skillList.badaozhan,skillList.baijinzhixing],
   state:[],
 };
 

@@ -14,7 +14,8 @@
     "tslint": "^6.0.0",
     "antd": "latest",
     "react-redux": "latest",
-    "lodash": "latest"
+    "lodash": "latest",
+    "prop-types": "latest"
   },
   "devDependencies": {
     "babel-eslint": "^9.0.0",

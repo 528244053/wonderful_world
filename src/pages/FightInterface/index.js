@@ -199,9 +199,9 @@ class FightInterFace extends React.Component {
 
   getPersonInfoById = (personId,roleList,enemy,renderRoleList,renderEnemy) => {
     const allRenderPerson = [...renderRoleList,renderEnemy];
-    const person = allRenderPerson.find(person => person.id === personId);
     const allPerson = [...roleList,enemy];
-    const renderPerson = allPerson.find(person => person.id === personId);
+    const person = allPerson.find(person => person.id === personId);
+    const renderPerson = allRenderPerson.find(person => person.id === personId);
     return [person,renderPerson];
   };
 
