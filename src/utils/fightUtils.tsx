@@ -13,12 +13,12 @@ export const calculateDamage = (sourceState:liveThings, targetState:liveThings, 
   const isCri = getRandomResultByRate(cri);
   const isMiss = getRandomResultByRate(miss);
   let damage = 0;
+  const damageRate = 1 - (targetState.def - 20) * 1.8 / (80 + targetState.def );
   if(isCri) {
-    damage = Number.parseInt((sourceState.atk * 100 / (100 + targetState.def) * criDamage).toString());
+    damage = Number.parseInt((sourceState.atk * damageRate * criDamage).toString());
   } else if (!isMiss) {
-    damage = Number.parseInt((sourceState.atk * 100 / (100 + targetState.def)).toString());
+    damage = Number.parseInt((sourceState.atk * damageRate).toString());
   }
-
   const isRole = lodash.get(sourceState,'level');
   if(message) {
     if(isCri || !isMiss) {
